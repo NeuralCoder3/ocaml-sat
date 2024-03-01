@@ -33,8 +33,7 @@ We use a simplified [DPLL](https://en.wikipedia.org/wiki/DPLL_algorithm) algorit
 - Choose pure literals (same across all clauses)
 - Make a decision about an arbitrary literal otherwise
 
-The current implementation does not perform purity elimination for simplicity.
-Furthermore, no [CDCL](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning) optimizations in the form of clause-learning for conflicts are applied.
+No [CDCL](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning) optimizations in the form of clause-learning for conflicts are applied.
 
 The algorithm in `dpll.ml` exactly performs this algorithm in this order:
 - Helper function for propagation of literal decisions
@@ -54,3 +53,6 @@ Hence, one can formulate the code as operating on a monad where the default impl
 The combination for the decision case can be implemented using the [MPlus monoid](https://wiki.haskell.org/MonadPlus) which both options and lists satisfy in a simplified form that is sufficient for this use case.
 
 For the implementation of the monad, monad extensions, and monad operations, we chose modules and functors.
+
+Note that with pure literal, no longer all solutions are found.
+Pure literals is a one-sided approximation.

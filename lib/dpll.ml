@@ -9,6 +9,8 @@ module SAT (M:Monad) = struct
   open M
   open MO
 
+  let pure_elimination = true
+
   let sat (xxs:cnf) : literal list M.t =
     let propagate lit xss =
       List.filter_map (fun xs ->
@@ -31,11 +33,30 @@ module SAT (M:Monad) = struct
         ) xss with
         | Some x -> dpll (propagate x xss) |> map (fun ys -> x :: ys)
         | None ->
-          (* make a decision *)
-          let lit = List.hd (List.hd xss) in
-          (dpll (propagate lit xss) |> map (fun ys -> lit :: ys)) <|>
-          (dpll (propagate (negate lit) xss) |> map (fun ys -> negate lit :: ys))
-        )
+        (
+          let make_decision () =
+            let lit = List.hd (List.hd xss) in
+            (dpll (propagate lit xss) |> map (fun ys -> lit :: ys)) <|>
+            (dpll (propagate (negate lit) xss) |> map (fun ys -> negate lit :: ys))
+          in
+          if pure_elimination then
+            (* check for pure literals *)
+            (* disable to ensure finding all solutions *)
+            let rec pure xs =
+              match xs with
+              | [] -> None
+              | x :: xs' ->
+                (* check if literal x of xs is never negated in xss *)
+                if List.exists (fun ys -> List.mem (negate x) ys) xss then pure xs'
+                else Some x
+            in
+            match List.find_map pure xss with
+            (* found a pure literal -> propagate *)
+            | Some x -> dpll (propagate x xss) |> map (fun ys -> x :: ys)
+            | None -> make_decision ()
+          else
+            make_decision ()
+        ))
     in
     dpll xxs
 
