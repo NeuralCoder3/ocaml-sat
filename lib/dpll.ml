@@ -4,6 +4,10 @@ let negate = function
   | Pos x -> Neg x
   | Neg x -> Pos x
 
+let (<|>) x y = match x with
+  | Some _ as s -> s
+  | None -> y
+
 let sat (xxs:cnf) : literal list option =
   let propagate lit xss =
     List.filter_map (fun xs ->
@@ -12,32 +16,24 @@ let sat (xxs:cnf) : literal list option =
         Some (List.filter (fun x -> x <> negate lit) xs)
     ) xss
   in
-  (* unit propagate *)
-  let unit_propagate xss =
-    let rec loop xss =
-      match List.filter_map (fun xs ->
+  let rec dpll xss =
+    match xss with
+    | [] -> Some []
+    | _ :: _ when List.exists (fun xs -> xs = []) xss -> None
+    | _ ->
+      (
+      (* propagate unit clauses *)
+      match List.find_map (fun xs ->
         match xs with
         | [x] -> Some x
         | _ -> None
       ) xss with
-      | [] -> [], xss
-      | lit :: _ -> 
-        let choices, cnf' = loop (propagate lit xss) in
-        lit :: choices, cnf'
-    in
-    loop xss
-  in
-  let rec dpll xss =
-    match unit_propagate xss with
-    | c, [] -> Some c
-    | _, xss when List.exists (fun xs -> xs = []) xss -> None
-    | c, xss ->
-      (let lit = List.hd (List.hd xss) in
-      match dpll (propagate lit xss) with
-      | None -> 
-        (match dpll (propagate (negate lit) xss) with
-        | None -> None
-        | Some lits -> Some (c @ negate lit :: lits))
-      | Some lits -> Some (c@lit :: lits))
+      | Some x -> dpll (propagate x xss) |> Option.map (fun ys -> x :: ys)
+      | None ->
+        (* make a decision *)
+        let lit = List.hd (List.hd xss) in
+        (dpll (propagate lit xss) |> Option.map (fun ys -> lit :: ys)) <|>
+        (dpll (propagate (negate lit) xss) |> Option.map (fun ys -> negate lit :: ys))
+      )
   in
   dpll xxs
