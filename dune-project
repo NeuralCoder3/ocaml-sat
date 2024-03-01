@@ -5,20 +5,20 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github NeuralCoder3/ocaml-sat))
 
-(authors "Author Name")
+(authors "Marcel Ullrich")
 
-(maintainers "Maintainer Name")
+(maintainers "Marcel Ullrich")
 
 (license LICENSE)
 
-(documentation https://url/to/documentation)
+(documentation https://github.com/NeuralCoder3/ocaml-sat)
 
 (package
  (name sat)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "Boolean satisfiability solver")
+ (description "A simply DPLL-like approach to boolean formula satisfiability in propositional logic. CNF transformation via tseytin.")
  (depends ocaml dune)
  (tags
   (topics "to describe" your project)))
